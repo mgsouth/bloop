@@ -4,7 +4,37 @@
                (:export #:bloop #:*tco* #:*break-on-huh*))
 (cl:in-package #:bloop)
 (declaim (optimize (speed 1) (safety 3) (debug 3)))
+
 #|
+--------------------------------------------------------------------------------
+
+     (bloop:bloop
+      (5 LET A = 0)
+      (10 LET A = (1+ A))
+      (15 PRINT "A:" _ A %)
+      (20 IF (< 20 A) THEN 30)
+      (25 GOSUB 10)
+      (30 END))
+
+=>
+      A:1 A:2     A:3     A:4     A:5     A:6     A:7     A:8     A:9     A:10    A:11
+
+     debugger invoked on a SIMPLE-ERROR in thread
+     #<THREAD tid=17336 "main thread" RUNNING {1003E28133}>:
+        !DP@10
+
+DP = Ran out of Stack. Invoke TCO superpowers!
+
+     (setf bloop:*tco* t)
+     (bloop:bloop ...same code)
+
+=>
+     A:1        A:2     A:3     A:4     A:5     A:6     A:7     A:8     A:9
+     A:10    A:11    A:12    A:13    A:14    A:15    A:16    A:17    A:18
+     A:19    A:20    A:21
+
+--------------------------------------------------------------------------------
+
 line ::= ( lnum-expr [lbody] )
 lbody ::= { end-clause | gosub-clause | goto-clause | if-clause | let-clause | print-clause | rem-clause | ret-clause }
 end-clause ::= "END"
@@ -93,6 +123,7 @@ Runtime errors:
 
 !NG -- Return stack underflow; RETURN without prior GOSUB.
 
+--------------------------------------------------------------------------------
 |#
 
 (defvar *tco* nil "If true, do Tail-Call Optimization")
